@@ -68,3 +68,19 @@ char *mystrchr(char *s, char c) {
 		else return NULL;
 	return s - 1;
 }
+
+// finds s2 in s1
+char *mystrstr(char *s1, char *s2) {
+	while (*s1++) {
+		char *pos = s1;
+		char *s2pos = s2;
+		int equal = 1;
+		while (*s2pos++ && *pos++) {
+			if (*s2pos != *pos) {
+				equal = 0;
+			}
+		}
+		if (equal) return s1;
+	}
+	return NULL;
+}
