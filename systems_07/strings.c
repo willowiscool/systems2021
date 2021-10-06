@@ -26,6 +26,7 @@ char *mystrncpy(char *dest, char *source, int n) {
 		dest++;
 		source++;
 	}
+	return originalDest;
 }
 
 char *mystrcat(char *dest, char *source) {
