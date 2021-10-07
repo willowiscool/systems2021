@@ -60,6 +60,14 @@ int main() {
 	printf("\t\t[standard]:\t[%d]\n", strcmp("abc", "abc") );
 	printf("\t\t[mine]:\t\t[%d]\n", mystrcmp("abc", "abc") );
 
+	printf("\nTesting strstr\n");
+	printf("\tFinding \"bc\" in \"abcd\":\n");
+	printf("\t\t[standard]:\t[%p]\n", strstr("abcd", "bc"));
+	printf("\t\t[mine]:\t\t[%p]\n", mystrstr("abcd", "bc"));
+	printf("\tFinding \"cz\" in \"abcd\":\n");
+	printf("\t\t[standard]:\t[%p]\n", strstr("abcd", "cz"));
+	printf("\t\t[mine]:\t\t[%p]\n", mystrstr("abcd", "cz"));
+
 	return 0;
 }
 	
