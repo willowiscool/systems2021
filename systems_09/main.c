@@ -9,12 +9,12 @@ struct numberName {
 };
 
 void print_list(struct numberName* node) {
-	while (node->next) {
-		printf("%d is named %s\n", node->i, node->str);
+	printf("[\n");
+	while (node) {
+		printf("\t%d is named %s\n", node->i, node->str);
 		node = node->next;
 	}
-	//probably smarter way to do this but cba
-	printf("%d is named %s\n", node->i, node->str);
+	printf("]\n");
 }
 struct numberName* insert_front(struct numberName* first, int i, char* str) {
 	struct numberName* nn = malloc(sizeof(struct numberName));
@@ -26,18 +26,18 @@ struct numberName* insert_front(struct numberName* first, int i, char* str) {
 }
 struct numberName* free_list(struct numberName* first) {
 	struct numberName* node = first;
-	while (node->next) {
+	while (node) {
 		free(node->str);
 		struct numberName* next = node->next;
 		free(node);
 		node = next;
 	}
-	free(node->str);
-	free(node);
 	return first;
 }
 
 int main() {
+	printf("Print null list");
+	print_list((struct numberName*) 0);
 	// create initial nn
 	struct numberName* nn = malloc(sizeof(struct numberName));
 	nn->str = malloc(4);
