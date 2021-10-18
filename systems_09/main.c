@@ -38,14 +38,16 @@ struct numberName* remove_node(struct numberName* first, int i) {
 	}
 }
 struct numberName* free_list(struct numberName* first) {
+	printf("Freeing list\n");
 	struct numberName* node = first;
 	while (node) {
+		printf("\tFreeing %d\n", node->i);
 		free(node->str);
 		struct numberName* next = node->next;
 		free(node);
 		node = next;
 	}
-	return first;
+	return NULL;
 }
 
 int main() {
@@ -73,7 +75,8 @@ int main() {
 
 	print_list(nn);
 
-	free_list(nn);
+	nn = free_list(nn);
 
+	printf("nn: %p\n", nn);
 	if (nn == NULL) printf("Successfully freed\n");
 }
