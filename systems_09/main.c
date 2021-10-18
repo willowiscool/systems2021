@@ -1,12 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
-struct numberName {
-	char* str;
-	int i;
-	struct numberName *next;
-};
+#include "main.h"
 
 void print_list(struct numberName* node) {
 	printf("[\n");
@@ -23,6 +18,24 @@ struct numberName* insert_front(struct numberName* first, int i, char* str) {
 	nn->i = i;
 	nn->next = first;
 	return nn;
+}
+struct numberName* remove_node(struct numberName* first, int i) {
+	struct numberName* node = first;
+	struct numberName* previous = NULL;
+	while (node) {
+		if (node->i == i) {
+			struct numberName* next = node->next;
+			free(node->str);
+			free(node);
+			if (previous == NULL) {
+				return next;
+			}
+			previous->next = next;
+			return first;
+		}
+		previous = node;
+		node = node->next;
+	}
 }
 struct numberName* free_list(struct numberName* first) {
 	struct numberName* node = first;
@@ -50,6 +63,13 @@ int main() {
 	nn = insert_front(nn, 3, "Three");
 	nn = insert_front(nn, 2, "Two");
 	nn = insert_front(nn, 1, "One");
+
+	print_list(nn);
+
+	printf("Removing odd numbers\n");
+	nn = remove_node(nn, 1);
+	nn = remove_node(nn, 3);
+	nn = remove_node(nn, 5);
 
 	print_list(nn);
 
