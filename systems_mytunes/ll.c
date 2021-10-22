@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "ll.h"
 
 struct song_node* insert_front(struct song_node* list, char* name, char* artist) {
@@ -15,6 +16,7 @@ struct song_node* insert_front(struct song_node* list, char* name, char* artist)
 }
 struct song_node* insert_order(struct song_node* list, char* name, char* artist) {
 	if (list == NULL) return insert_front(list, name, artist);
+	if (song_comp(list, name, artist) > 0) return insert_front(list, name, artist);
 	struct song_node* front = list;
 	struct song_node* prev_list;
 	while(list != NULL && song_comp(list, name, artist) < 0) {
@@ -57,9 +59,45 @@ void print_list(struct song_node* list) {
 	}
 	printf("]\n");
 }
-struct song_node* find_song(struct song_node* list, char* name, char* artist);
-struct song_node* first_song(struct song_node* list, char* artist);
-struct song_node* random_song(struct song_node* list);
+
+// alphabetic_strcmp works here too
+struct song_node* find_song(struct song_node* list, char* name, char* artist) {
+	while (list != NULL) {
+		if (alphabetic_strcmp(list->name, name) == 0 && alphabetic_strcmp(list->artist, artist) == 0) return list;
+		list = list->next;
+	}
+	return list; // null
+}
+struct song_node* first_song(struct song_node* list, char* artist) {
+	while (list != NULL) {
+		if (alphabetic_strcmp(list->artist, artist) == 0) return list;
+		list = list->next;
+	}
+	return list;
+}
+
+/* Cheap but not very equal
+struct song_node* random_song(struct song_node* list) {
+	if (list == NULL) return list;
+	srand(time(NULL));
+	int randint = rand();
+	while (list->next != NULL && randint > (RAND_MAX / 2)) {
+		list = list->next;
+	}
+	return list;
+}
+*/
+struct song_node* random_song(struct song_node* list) {
+	struct song_node* front = list;
+	int length = 0;
+	while (list != NULL) {
+		length++;
+		list = list->next;
+	}
+	int index = rand() % length;
+	while (index-- > 0) front = front->next;
+	return front;
+}
 
 struct song_node* remove_song(struct song_node* list, char* name, char* artist);
 
