@@ -6,8 +6,9 @@
 
 struct song_node* insert_front(struct song_node* list, char* name, char* artist) {
 	struct song_node* new = malloc(sizeof(struct song_node));
-	new->name = malloc(sizeof(name));
-	new->artist = malloc(sizeof(artist));
+	// strlen + 1 '\0' byte
+	new->name = malloc(strlen(name) + 1);
+	new->artist = malloc(strlen(artist) + 1);
 	strcpy(new->name, name);
 	strcpy(new->artist, artist);
 	strcpy(new->name, name);
@@ -99,6 +100,37 @@ struct song_node* random_song(struct song_node* list) {
 	return front;
 }
 
-struct song_node* remove_song(struct song_node* list, char* name, char* artist);
+struct song_node* remove_song(struct song_node* list, char* name, char* artist) {
+	if (alphabetic_strcmp(list->artist, artist) == 0 && alphabetic_strcmp(list->name, name) == 0) {
+		struct song_node* next = list->next;
+		free_node(list);
+		return next;
+	}
+	struct song_node* first = list;
+	while (list->next != NULL) {
+		struct song_node* prev = list;
+		list = list->next;
+		if (alphabetic_strcmp(list->artist, artist) == 0 && alphabetic_strcmp(list->name, name) == 0) {
+			prev->next = list->next;
+			free_node(list);
+			return first;
+		}
+	}
+}
 
-struct song_node* free_list(struct song_node* list);
+struct song_node* free_list(struct song_node* list) {
+	if (list == NULL) return NULL;
+	while (list->next != NULL) {
+		struct song_node* next = list->next;
+		free_node(list);
+		list = next;
+	}
+	free_node(list);
+	return NULL;
+}
+struct song_node* free_node(struct song_node* node) {
+	free(node->name);
+	free(node->artist);
+	free(node);
+	return NULL;
+}
