@@ -24,4 +24,10 @@ int main() {
 	printf("Finding radiohead:\n");
 	struct song_node* radiohead = library_find_artist(library, "radiohead");
 	print_list(radiohead);
+	printf("Removing paranoid android:\n");
+	library_remove_song(library, "paranoid Android", "RadioHead");
+	print_library(library);
+	printf("Clearing library:\n");
+	clear_library(library);
+	print_library(library);
 }

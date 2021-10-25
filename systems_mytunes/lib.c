@@ -73,3 +73,14 @@ void print_library(struct song_node** library) {
 	}
 }
 void shuffle(struct song_node** library);
+
+void library_remove_song(struct song_node** library, char* name, char* artist) {
+	library[letter_index(*artist)] = remove_song(library[letter_index(*artist)], name, artist);
+}
+void clear_library(struct song_node** library) {
+	for (int i = 0; i < 27; i++) {
+		if (library[i] != NULL) {
+			library[i] = free_list(library[i]);
+		}
+	}
+}

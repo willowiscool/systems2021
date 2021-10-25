@@ -13,4 +13,4 @@ void shuffle(struct song_node** library);
 
 //struct song_node** library_remove_song(char* name, char* artist);
 void library_remove_song(struct song_node** library, char* name, char* artist);
-struct song_node** clear_library(struct song_node** library);
+void clear_library(struct song_node** library);
