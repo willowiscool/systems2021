@@ -1,8 +1,11 @@
 #include <stdio.h>
+#include <time.h>
+#include <stdlib.h>
 #include "ll.h"
 #include "lib.h"
 
 int main() {
+	srand(time(NULL));
 	struct song_node **library = make_library();
 	library_add_song(library, "10-20-40", "Rina Sawayama");
 	library_add_song(library, "thunderstruck", "ac/dc");
@@ -27,6 +30,8 @@ int main() {
 	printf("Removing paranoid android:\n");
 	library_remove_song(library, "paranoid Android", "RadioHead");
 	print_library(library);
+	printf("Shuffling:\n");
+	shuffle(library);
 	printf("Clearing library:\n");
 	clear_library(library);
 	print_library(library);

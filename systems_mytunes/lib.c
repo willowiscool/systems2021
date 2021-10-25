@@ -72,7 +72,20 @@ void print_library(struct song_node** library) {
 		print_list(library[26]);
 	}
 }
-void shuffle(struct song_node** library);
+void shuffle(struct song_node** library) {
+	// gonna print five songs
+	int number_of_songs = 5; // can also be random (or pre-processor directive but shush)
+	while (number_of_songs-- > 0) {
+		int i = rand() % 27;
+		int ogI = i;
+		while (library[i] == NULL) {
+			i = (i + 1) % 27;
+			if (i == ogI) return; // empty library :(
+		}
+		struct song_node* song = random_song(library[i]);
+		printf("\t%s by %s\n", song->name, song->artist);
+	}
+}
 
 void library_remove_song(struct song_node** library, char* name, char* artist) {
 	library[letter_index(*artist)] = remove_song(library[letter_index(*artist)], name, artist);
