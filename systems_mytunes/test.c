@@ -18,4 +18,10 @@ int main() {
 	print_letter(library, 'z');
 	printf("Printing radiohead:\n");
 	print_artist(library, "Radiohead");
+	printf("Finding paranoid android:\n");
+	struct song_node* paranoid_android = library_find_song(library, "paranoid android", "radiohead");
+	printf("\tfound %s by %s\n", paranoid_android->name, paranoid_android->artist);
+	printf("Finding radiohead:\n");
+	struct song_node* radiohead = library_find_artist(library, "radiohead");
+	print_list(radiohead);
 }

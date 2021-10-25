@@ -5,6 +5,7 @@ void library_add_song(struct song_node** library, char* name, char* artist);
 struct song_node* library_find_song(struct song_node** library, char* name, char* artist);
 struct song_node* library_find_artist(struct song_node** library, char* artist);
 
+int letter_index(char letter);
 void print_letter(struct song_node** library, char letter);
 void print_artist(struct song_node** library, char* artist);
 void print_library(struct song_node** library);
