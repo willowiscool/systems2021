@@ -1,14 +1,26 @@
 #include <stdio.h>
 #include <dirent.h>
+#include <errno.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
-int main() {
-	// list all the files in the current directory
-	// specify which files are directories
-	// show the total size of the regular files in the directory (no subdirs)
+int main(int argc, char *argv[]) {
+	char *dirname;
+	if (argc >= 2) dirname = argv[1];
+	else {
+		char buff[1000];
+		printf("Enter a directory to list: ");
+		fgets(buff, sizeof(buff), stdin);
+		dirname = buff;
+		if (dirname[strlen(dirname) - 1] == '\n') dirname[strlen(dirname) - 1] = '\0'; // erase newline
+	}
 	
-	DIR *wd = opendir("./");
+	printf("dirname: '%s'\n", dirname);
+	DIR *wd = opendir(dirname);
+	if (wd == NULL) {
+		printf("Error opening directory: %s\n", strerror(errno));
+	}
 	struct dirent *entry;
 	entry = readdir(wd);
 	if (entry == NULL) {
