@@ -10,6 +10,26 @@ int main(int argc, char *argv[]) {
 	if (argc == 2) {
 		if (strcmp(argv[1], "-read_csv") == 0) {
 			return readCSV();
+		} else if (strcmp(argv[1], "-read_data") == 0) {
+			int fd = open("./nyc_pop.data", O_RDONLY);
+			if (fd == -1) {
+				printf("Error opening data file: %s\n", strerror(errno));
+				return -1;
+			}
+			struct stat status;
+			int err = fstat(fd, &status);
+			if (err == -1) {
+				printf("Error statting data file: %s\n", strerror(errno));
+				return -1;
+			}
+			struct pop_entry data[status.st_size / sizeof(struct pop_entry)];
+			err = read(fd, data, sizeof(data));
+			if (err == -1) {
+				printf("Error reading data file: %s\n", strerror(errno));
+				return -1;
+			}
+			displayData(status.st_size / sizeof(struct pop_entry), data);
+			return 0;
 		}
 	}
 	printf("Usage: %s OPTION\n\t-read_csv\tCreate a new data file out of the CSV\n\t-read_data\tDisplay the contents of the data file\n\t-add_data\tPut new data into the data file\n\t-update_data\tUpdate a specific entry in the data\n", argv[0]);
