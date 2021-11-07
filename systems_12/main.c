@@ -30,6 +30,10 @@ int main(int argc, char *argv[]) {
 			}
 			displayData(status.st_size / sizeof(struct pop_entry), data);
 			return 0;
+		} else if (strcmp(argv[1], "-add_data") == 0) {
+			return addData();
+		} else if (strcmp(argv[1], "-update_data") == 0) {
+			return updateData();
 		}
 	}
 	printf("Usage: %s OPTION\n\t-read_csv\tCreate a new data file out of the CSV\n\t-read_data\tDisplay the contents of the data file\n\t-add_data\tPut new data into the data file\n\t-update_data\tUpdate a specific entry in the data\n", argv[0]);
@@ -115,6 +119,29 @@ void displayData(int count, struct pop_entry data[]) {
 	}
 }
 
-struct pop_entry getInput();
-void addData();
-void updateData();
+struct pop_entry getInput() {
+	printf("Enter year boro pop: \n");
+	char buf[1000];
+	fgets(buf, sizeof(buf), stdin);
+	struct pop_entry result;
+	sscanf(buf, "%d %s %d\n", &result.year, result.boro, &result.population);
+	return result;
+}
+int addData() {
+	struct pop_entry new_data = getInput();
+	int fd = open("./nyc_pop.data", O_WRONLY | O_APPEND);
+	if (fd == -1) {
+		printf("Error opening data file: %s\n", strerror(errno));
+		return -1;
+	}
+	int b = write(fd, &new_data, sizeof(new_data));
+	if (b != sizeof(new_data)) {
+		printf("Error appending data file: %s\n", strerror(errno));
+		return -1;
+	}
+	printf("Appended data to file: year: %d\tboro: %s\tpop: %d\n", new_data.year, new_data.boro, new_data.population);
+	return 0;
+}
+int updateData() {
+	return -1;
+}

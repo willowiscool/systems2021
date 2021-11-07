@@ -4,9 +4,9 @@ struct pop_entry {
 	char boro[15];
 };
 int readCSV();
-//struct pop_entry[] readData();
+//int readData(struct pop_entry *data);
 void displayData(int count, struct pop_entry data[]);
 
 struct pop_entry getInput();
-void addData();
-void updateData();
+int addData();
+int updateData();
