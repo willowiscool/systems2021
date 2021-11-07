@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
@@ -11,24 +12,10 @@ int main(int argc, char *argv[]) {
 		if (strcmp(argv[1], "-read_csv") == 0) {
 			return readCSV();
 		} else if (strcmp(argv[1], "-read_data") == 0) {
-			int fd = open("./nyc_pop.data", O_RDONLY);
-			if (fd == -1) {
-				printf("Error opening data file: %s\n", strerror(errno));
-				return -1;
-			}
-			struct stat status;
-			int err = fstat(fd, &status);
-			if (err == -1) {
-				printf("Error statting data file: %s\n", strerror(errno));
-				return -1;
-			}
-			struct pop_entry data[status.st_size / sizeof(struct pop_entry)];
-			err = read(fd, data, sizeof(data));
-			if (err == -1) {
-				printf("Error reading data file: %s\n", strerror(errno));
-				return -1;
-			}
-			displayData(status.st_size / sizeof(struct pop_entry), data);
+			int count = 0;
+			struct pop_entry* data = readData(&count);
+			if (data == NULL) return -1;
+			displayData(count, data);
 			return 0;
 		} else if (strcmp(argv[1], "-add_data") == 0) {
 			return addData();
@@ -98,20 +85,43 @@ int readCSV() {
 		strcpy(data[i+4].boro, "Staten Island");
 	}
 
-	fd = open("./nyc_pop.data", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	return writeData(data, sizeof(data));
+}
+int writeData(struct pop_entry* data, int size) {
+	int fd = open("./nyc_pop.data", O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (fd == -1) {
 		printf("Error opening data file: %s\n", strerror(errno));
 		return -1;
 	}
-	int b = write(fd, data, sizeof(data));
-	if (b != sizeof(data)) {
+	int b = write(fd, data, size);
+	if (b != size) {
 		printf("Error writing data file: %s\n", strerror(errno));
 		return -1;
 	}
 	printf("wrote %d bytes to nyc_pop.data\n", b);
 	return 0;
 }
-//struct pop_entry[] readData();
+struct pop_entry *readData(int *count) {
+	int fd = open("./nyc_pop.data", O_RDONLY);
+	if (fd == -1) {
+		printf("Error opening data file: %s\n", strerror(errno));
+		return NULL;
+	}
+	struct stat status;
+	int err = fstat(fd, &status);
+	if (err == -1) {
+		printf("Error statting data file: %s\n", strerror(errno));
+		return NULL;
+	}
+	*count = status.st_size / sizeof(struct pop_entry);
+	struct pop_entry *data = malloc(status.st_size);
+	err = read(fd, data, status.st_size);
+	if (err == -1) {
+		printf("Error reading data file: %s\n", strerror(errno));
+		return NULL;
+	}
+	return data;
+}
 void displayData(int count, struct pop_entry data[]) {
 	int i;
 	for (i = 0; i < count; i++) {
@@ -120,7 +130,7 @@ void displayData(int count, struct pop_entry data[]) {
 }
 
 struct pop_entry getInput() {
-	printf("Enter year boro pop: \n");
+	printf("Enter year boro pop: ");
 	char buf[1000];
 	fgets(buf, sizeof(buf), stdin);
 	struct pop_entry result;
@@ -143,5 +153,16 @@ int addData() {
 	return 0;
 }
 int updateData() {
-	return -1;
+	int count = 0;
+	struct pop_entry* data = readData(&count);
+	if (data == NULL) return -1;
+	displayData(count, data);
+	char buf[1000];
+	printf("entry to update: ");
+	fgets(buf, sizeof(buf), stdin);
+	int ind = 0;
+	sscanf(buf, "%d\n", &ind);
+	struct pop_entry input = getInput();
+	data[ind] = input;
+	return writeData(data, count * sizeof(struct pop_entry));
 }
