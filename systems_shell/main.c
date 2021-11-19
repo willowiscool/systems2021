@@ -1,3 +1,4 @@
+#include "token.h"
 #include "main.h"
 #include "run.h"
 #include <stdio.h>
@@ -13,54 +14,49 @@ void printPrompt() {
 // hopefully the case doesn't happen where fgets gets something like abc\ndefg...
 // don't see that happening any time soon
 char* getInput() {
+	/*
 	char* input = malloc(1000);
 	char* in = fgets(input, 1000, stdin);
-	if (in == NULL) {
-		free(input);
+	*/
+	char input[1000];
+	char* beginning = fgets(input, 1000, stdin);
+	if (beginning == NULL) {
 		return NULL;
 	}
-	while (*in != '\n' && *in != '\0') in++;
-	*in = '\0';
-	return input;
+	// strip beginning whitespace
+	while (*beginning == '\t' || *beginning == ' ') {
+		beginning++;
+	}
+	char* end = beginning;
+	// get size, start at 1 for terminating null
+	int size = 1;
+	while (*end != '\n' && *end != '\0') {
+		end++;
+		size++;
+	}
+	*end = '\0';
+	char* output = malloc(size);
+	strcpy(output, beginning);
+	return output;
 }
-char** parseInput(char* input) {
-	// count spaces
-	int spaces = 0;
-	char* incount = input;
-	while (*incount != '\0')
-		if (*(incount++) == ' ')
-			spaces++;
-
-	// one more element than there are spaces
-	spaces++;
-	char** spaced = malloc(sizeof(char*) * (spaces + 1));
-	int i;
-	for (i = 0; i < spaces; i++)
-		spaced[i] = strsep(&input, " ");
-
-	spaced[i] = NULL;
-
-	return spaced;
-}
-
 int main() {
 	while (1) {
 		printPrompt();
 		char* inputRaw = getInput();
 		if (inputRaw == NULL) exit(0);
 		if (strcmp(inputRaw, "exit") == 0) exit(0);
-		char** input = parseInput(inputRaw);
-		// TODO exit with the right code
-		if (strcmp(input[0], "exit") == 0) {
-			if (input[1] != NULL) exit(atoi(input[1]));
-			exit(0);
+		struct token* input = parseInput(inputRaw);
+
+		if (input->type == COMMAND) {
+			if (strcmp(input->command[0], "exit") == 0) {
+				if (input->command[1] != NULL) exit(atoi(input->command[1]));
+				exit(0);
+			}
+			if (input->command[0] == NULL) continue;
+			if (strcmp(input->command[0], "") == 0) continue;
 		}
-		if (input[0] == NULL) continue;
-		if (strcmp(input[0], "") == 0) continue;
 
 		int exit = run(input);
-		// not using exit for now but can integrate into variables if I do that
-		free(input[0]); // points to the start of the whole block
-		free(input);
+		// TODO FREE INPUT
 	}
 }

@@ -1,4 +1,6 @@
+#ifndef MAIN_H
+#define MAIN_H
 void printPrompt();
 char* getInput();
-// null terminated arr
-char** parseInput(char* input);
+
+#endif // MAIN_H
