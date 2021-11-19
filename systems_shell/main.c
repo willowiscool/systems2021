@@ -9,15 +9,8 @@ void printPrompt() {
 	printf("$ ");
 }
 
-// sometimes, fgets doesn't get the whole line in one go
-// this function will add together all of the chunks until the newline
-// hopefully the case doesn't happen where fgets gets something like abc\ndefg...
-// don't see that happening any time soon
 char* getInput() {
-	/*
-	char* input = malloc(1000);
-	char* in = fgets(input, 1000, stdin);
-	*/
+	// TODO: can we avoid 1000?
 	char input[1000];
 	char* beginning = fgets(input, 1000, stdin);
 	if (beginning == NULL) {

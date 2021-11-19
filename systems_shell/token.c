@@ -1,6 +1,7 @@
 #include "token.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 struct token* parseInput(char* input) {
 	if (input == NULL || *input == '\0') return NULL;
@@ -46,8 +47,11 @@ struct token* parseInput(char* input) {
 	spaces++;
 	char** spaced = malloc(sizeof(char*) * (spaces + 1));
 	int i;
-	for (i = 0; i < spaces; i++)
+	for (i = 0; i < spaces; i++) {
 		spaced[i] = strsep(&input, " ");
+		// in case multiple spaces
+		while (input != NULL && *input != '\0' && (*input == ' ' || *input == '\t')) input++;
+	}
 
 	spaced[i] = NULL;
 
