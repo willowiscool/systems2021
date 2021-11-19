@@ -1,0 +1,18 @@
+#+TITLE: Shell
+
+* Features
+- Run commands with arguments (duh)
+- Separate multiple commands on one line with semicolons
+* Not Yet Implemented
+- Redirection
+- Piping
+- Other bash builtins
+* Known Bugs
+- None yet
+* Copy of every function header
+#+begin_src C
+char* getInput();
+void printPrompt();
+struct token* parseInput(char* input);
+int run(struct token* input);
+#+end_src
