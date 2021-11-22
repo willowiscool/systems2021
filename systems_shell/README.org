@@ -3,12 +3,12 @@
 * Features
 - Run commands with arguments (duh)
 - Separate multiple commands on one line with semicolons
-* Not Yet Implemented
+- Pipe the output of one command to another (only two commands at a time for now)
 - Redirection
-- Piping
+* Not Yet Implemented
 - Other bash builtins
 * Known Bugs
-- None yet
+- Redirection doesn't work when piping
 * Copy of every function header
 #+begin_src C
 char* getInput();
@@ -17,4 +17,6 @@ struct token* parseInput(char* input);
 int run(struct token* input);
 FILE* runPopen(struct token* input, char* type);
 int runPipe(struct token* input);
+struct stdinAndStdoutFDs createRedirects(struct token* input);
+int undoRedirects(struct stdinAndStdoutFDs sasfd);
 #+end_src

@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <fcntl.h>
 
 FILE* runPopen(struct token* input, char* type) {
 	// reconstruct command
@@ -44,6 +45,41 @@ int runPipe(struct token* input) {
 	pipe(fd);
 	pclose(readFrom);
 	pclose(writeTo);
+	return 0; // TODO TODO TODO
+}
+
+struct stdinAndStdoutFDs createRedirects(struct token* input) {
+	struct stdinAndStdoutFDs sasfd;
+	sasfd.stdin = STDIN_FILENO;
+	sasfd.stdout = STDOUT_FILENO;
+	int err;
+	if (input->redirectTo != NULL) {
+		sasfd.stdout = dup(STDOUT_FILENO);
+		err = dup2(open(input->redirectTo, O_CREAT | O_WRONLY, 0644), STDOUT_FILENO);
+		if (err == -1) {
+			printf("Error redirecting to %s: %s\n", input->redirectTo, strerror(errno));
+		}
+	}
+	if (input->redirectFrom != NULL) {
+		sasfd.stdin = dup(STDIN_FILENO);
+		err = dup2(open(input->redirectFrom, O_RDONLY), STDIN_FILENO);
+		if (err == -1) {
+			printf("Error redirecting from %s: %s\n", input->redirectFrom, strerror(errno));
+		}
+	}
+	return sasfd;
+}
+
+// not currently used, couldn't make it work and had no idea why
+// anyway delete this comment if you use it LMAO
+int undoRedirects(struct stdinAndStdoutFDs sasfd) {
+	int ret = 0;
+	//if (sasfd.stdin != -1) ret = dup2(STDIN_FILENO, sasfd.stdin);
+	//if (sasfd.stdout != -1) ret = dup2(STDOUT_FILENO, sasfd.stdout);
+	ret = dup2(STDIN_FILENO, sasfd.stdin);
+	ret = dup2(STDOUT_FILENO, sasfd.stdout);
+	printf("hi\n");
+	return ret;
 }
 
 int run(struct token* input) {
@@ -54,7 +90,8 @@ int run(struct token* input) {
 	}
 
 	if (input->type == PIPE) {
-		return runPipe(input);
+		int ret = runPipe(input);
+		return ret;
 	}
 
 	// input->type assumed to be COMMAND (in case you add more and forget to return)
@@ -86,6 +123,7 @@ int run(struct token* input) {
 		char* command = input->command[0];
 		while (*command == ' ' || *command == '\t') command++;
 		execvp(command, input->command);
+		createRedirects(input);
 		// something happened
 		printf("Error running %s: %s\n", input->command[0], strerror(errno));
 		exit(1);

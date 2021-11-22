@@ -6,4 +6,12 @@
 int run(struct token* input);
 FILE* runPopen(struct token* input, char* type);
 int runPipe(struct token* input);
+
+struct stdinAndStdoutFDs {
+	int stdin;
+	int stdout;
+};
+
+struct stdinAndStdoutFDs createRedirects(struct token* input);
+int undoRedirects(struct stdinAndStdoutFDs sasfd);
 #endif // RUN_H

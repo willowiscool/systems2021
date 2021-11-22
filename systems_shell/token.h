@@ -14,6 +14,8 @@ struct token {
 	struct token** children;
 	// for freeing
 	char* beginningOfStrPtr;
+	char* redirectTo;
+	char* redirectFrom;
 };
 
 // null-terminated array

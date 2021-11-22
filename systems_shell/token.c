@@ -9,24 +9,53 @@ struct token* parseInput(char* input) {
 
 	// check for splitting tokens
 	// any token that splits rootToken into two
-	char* semi = input;
-	char* pipe = input;
-	char* first = strsep(&semi, ";");
-	if (semi == NULL) {
-		first = strsep(&pipe, "|");
+	rootToken->type = COMMAND;
+	char* second = input;
+	char* first = strsep(&second, ";");
+	if (second != NULL) rootToken->type = SEMICOLON;
+	else {
+		second = input;
+		first = strsep(&second, "|");
+		if (second != NULL) rootToken->type = PIPE;
 	}
-	if (semi != NULL || pipe != NULL) {
-		if (semi != NULL) rootToken->type = SEMICOLON;
-		if (pipe != NULL) rootToken->type = PIPE;
+
+	rootToken->redirectTo = NULL;
+	rootToken->redirectFrom = NULL;
+
+	if (rootToken->type != SEMICOLON) {
+		char* afterGt = input;
+		char* beforeGt = strsep(&afterGt, ">");
+		if (afterGt != NULL) {
+			free(rootToken);
+			struct token* innerToken = parseInput(beforeGt);
+			while (*afterGt != '\0' && (*afterGt == ' ' || *afterGt == '\t')) afterGt++;
+			// TODO error rather than just ignoring it LOL
+			if (*afterGt == '\0') return innerToken;
+			// if you switch to not mallocing input turn this to strcpy!!!
+			innerToken->redirectTo = afterGt;
+		}
+		// copy paste for the win
+		char* afterLt = input;
+		char* beforeLt = strsep(&afterLt, "<");
+		if (afterLt != NULL) {
+			free(rootToken);
+			struct token* innerToken = parseInput(beforeLt);
+			while (*afterLt != '\0' && (*afterLt == ' ' || *afterLt == '\t')) afterLt++;
+			// TODO error rather than just ignoring it LOL
+			if (*afterLt == '\0') return innerToken;
+			// if you switch to not mallocing input turn this to strcpy!!!
+			innerToken->redirectFrom = afterLt;
+		}
+	}
+
+	if (rootToken->type == SEMICOLON || rootToken->type == PIPE) {
 		rootToken->children = malloc(sizeof(struct token*) * 3);
 		rootToken->children[0] = parseInput(first);
-		// need to edit this line some more later... lol
-		rootToken->children[1] = parseInput(semi != NULL ? semi : pipe);
+		rootToken->children[1] = parseInput(second);
 		rootToken->children[2] = NULL;
 		return rootToken;
 	}
 
-	rootToken->type = COMMAND;
 	rootToken->beginningOfStrPtr = input;
 
 	// strip spaces from the beginning
