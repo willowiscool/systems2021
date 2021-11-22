@@ -38,6 +38,7 @@ int main() {
 		char* inputRaw = getInput();
 		if (inputRaw == NULL) exit(0);
 		if (strcmp(inputRaw, "exit") == 0) exit(0);
+		if (strcmp(inputRaw, "") == 0) continue;
 		struct token* input = parseInput(inputRaw);
 
 		if (input->type == COMMAND) {
@@ -46,7 +47,6 @@ int main() {
 				exit(0);
 			}
 			if (input->command[0] == NULL) continue;
-			if (strcmp(input->command[0], "") == 0) continue;
 		}
 
 		int exit = run(input);

@@ -6,15 +6,22 @@
 struct token* parseInput(char* input) {
 	if (input == NULL || *input == '\0') return NULL;
 	struct token* rootToken = malloc(sizeof(struct token));
-	// check for semicolons
+
+	// check for splitting tokens
+	// any token that splits rootToken into two
 	char* semi = input;
+	char* pipe = input;
 	char* first = strsep(&semi, ";");
-	if (semi != NULL) {
-		// found a semicolon!
-		rootToken->type = SEMICOLON;
+	if (semi == NULL) {
+		first = strsep(&pipe, "|");
+	}
+	if (semi != NULL || pipe != NULL) {
+		if (semi != NULL) rootToken->type = SEMICOLON;
+		if (pipe != NULL) rootToken->type = PIPE;
 		rootToken->children = malloc(sizeof(struct token*) * 3);
 		rootToken->children[0] = parseInput(first);
-		rootToken->children[1] = parseInput(semi);
+		// need to edit this line some more later... lol
+		rootToken->children[1] = parseInput(semi != NULL ? semi : pipe);
 		rootToken->children[2] = NULL;
 		return rootToken;
 	}

@@ -9,11 +9,60 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+FILE* runPopen(struct token* input, char* type) {
+	// reconstruct command
+	// assume input type is COMMAND
+	int size = 0;
+	char** end = input->command;
+	while (*end != NULL) {
+		size += strlen(*end) + 1;
+		end++;
+	}
+	char command[size];
+	char* ptr = command;
+	char** arg = input->command;
+	while (*arg != NULL) {
+		strcpy(ptr, *arg);
+		ptr += strlen(*arg);
+		*ptr = ' ';
+		ptr++;
+		arg++;
+	}
+	*(ptr - 1) = '\0';
+
+	return popen(command, type);
+}
+
+int runPipe(struct token* input) {
+	// for now assume only two pipe commands
+	// need to fork anyway so that you can write to stdout
+	int pid = fork();
+	if (pid == 0) {
+		FILE* readFrom = runPopen(input->children[0], "r");
+		FILE* writeTo = runPopen(input->children[1], "w");
+		int fd[2];
+		fd[0] = fileno(readFrom);
+		fd[1] = fileno(writeTo);
+		pipe(fd);
+		pclose(readFrom);
+		pclose(writeTo);
+		exit(0);
+	} else {
+		int status;
+		waitpid(pid, &status, 0);
+		return WEXITSTATUS(status);
+	}
+}
+
 int run(struct token* input) {
 	if (input == NULL) return 0;
 	if (input->type == SEMICOLON) {
 		run(input->children[0]);
 		return run(input->children[1]);
+	}
+
+	if (input->type == PIPE) {
+		return runPipe(input);
 	}
 
 	// input->type assumed to be COMMAND (in case you add more and forget to return)
