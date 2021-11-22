@@ -35,23 +35,15 @@ FILE* runPopen(struct token* input, char* type) {
 
 int runPipe(struct token* input) {
 	// for now assume only two pipe commands
-	// need to fork anyway so that you can write to stdout
-	int pid = fork();
-	if (pid == 0) {
-		FILE* readFrom = runPopen(input->children[0], "r");
-		FILE* writeTo = runPopen(input->children[1], "w");
-		int fd[2];
-		fd[0] = fileno(readFrom);
-		fd[1] = fileno(writeTo);
-		pipe(fd);
-		pclose(readFrom);
-		pclose(writeTo);
-		exit(0);
-	} else {
-		int status;
-		waitpid(pid, &status, 0);
-		return WEXITSTATUS(status);
-	}
+	// TODO: more pipes
+	FILE* readFrom = runPopen(input->children[0], "r");
+	FILE* writeTo = runPopen(input->children[1], "w");
+	int fd[2];
+	fd[0] = fileno(readFrom);
+	fd[1] = fileno(writeTo);
+	pipe(fd);
+	pclose(readFrom);
+	pclose(writeTo);
 }
 
 int run(struct token* input) {
