@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
+
+/*
 FILE* runPopen(struct token* input, char* type) {
 	// reconstruct command
 	// assume input type is COMMAND
@@ -42,10 +44,54 @@ int runPipe(struct token* input) {
 	int fd[2];
 	fd[0] = fileno(readFrom);
 	fd[1] = fileno(writeTo);
+	/*fd[0] = fileno(writeTo);
+	fd[1] = fileno(readFrom);
 	pipe(fd);
-	pclose(readFrom);
 	pclose(writeTo);
+	pclose(readFrom);
 	return 0; // TODO TODO TODO
+}
+*/
+
+// not using popen so we can pipe more than 2 commands
+int runPipe(struct token* input) {
+	int pid = fork();
+	if (pid == 0) {
+		// child
+		int filedes[2];
+		pipe(filedes);
+
+		int pid2 = fork();
+		if (pid2 == 0) {
+			dup2(filedes[1], STDOUT_FILENO);
+			close(filedes[0]);
+
+			input = input->children[0];
+			// strip beginning whitespace
+			char* command = input->command[0];
+			while (*command == ' ' || *command == '\t') command++;
+			execvp(command, input->command);
+			// something happened
+			printf("Error running %s: %s\n", input->command[0], strerror(errno));
+			exit(1);
+		} else {
+			dup2(filedes[0], STDIN_FILENO);
+			close(filedes[1]);
+			createRedirects(input);
+			input = input->children[1];
+			// strip beginning whitespace
+			char* command = input->command[0];
+			while (*command == ' ' || *command == '\t') command++;
+			execvp(command, input->command);
+			// something happened
+			printf("Error running %s: %s\n", input->command[0], strerror(errno));
+			exit(1);
+		}
+	} else {
+		int status;
+		waitpid(pid, &status, 0);
+		return WEXITSTATUS(status);
+	}
 }
 
 struct stdinAndStdoutFDs createRedirects(struct token* input) {
@@ -70,15 +116,12 @@ struct stdinAndStdoutFDs createRedirects(struct token* input) {
 	return sasfd;
 }
 
-// not currently used, couldn't make it work and had no idea why
-// anyway delete this comment if you use it LMAO
 int undoRedirects(struct stdinAndStdoutFDs sasfd) {
 	int ret = 0;
-	//if (sasfd.stdin != -1) ret = dup2(STDIN_FILENO, sasfd.stdin);
-	//if (sasfd.stdout != -1) ret = dup2(STDOUT_FILENO, sasfd.stdout);
-	ret = dup2(STDIN_FILENO, sasfd.stdin);
-	ret = dup2(STDOUT_FILENO, sasfd.stdout);
-	printf("hi\n");
+	if (sasfd.stdin != STDIN_FILENO) close(STDIN_FILENO);
+	ret = dup2(sasfd.stdin, STDIN_FILENO);
+	if (sasfd.stdout != STDOUT_FILENO) close(STDOUT_FILENO);
+	ret = dup2(sasfd.stdout, STDOUT_FILENO);
 	return ret;
 }
 
@@ -119,11 +162,11 @@ int run(struct token* input) {
 	int pid = fork();
 	if (pid == 0) {
 		// child
+		createRedirects(input);
 		// strip beginning whitespace
 		char* command = input->command[0];
 		while (*command == ' ' || *command == '\t') command++;
 		execvp(command, input->command);
-		createRedirects(input);
 		// something happened
 		printf("Error running %s: %s\n", input->command[0], strerror(errno));
 		exit(1);
