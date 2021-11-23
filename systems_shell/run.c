@@ -126,6 +126,7 @@ int undoRedirects(struct stdinAndStdoutFDs sasfd) {
 }
 
 int run(struct token* input) {
+	//printToken(input, 0);
 	if (input == NULL) return 0;
 	if (input->type == SEMICOLON) {
 		run(input->children[0]);

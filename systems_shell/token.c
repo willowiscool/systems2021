@@ -33,6 +33,8 @@ struct token* parseInput(char* input) {
 			if (*afterGt == '\0') return innerToken;
 			// if you switch to not mallocing input turn this to strcpy!!!
 			innerToken->redirectTo = afterGt;
+
+			return innerToken;
 		}
 		// copy paste for the win
 		char* afterLt = input;
@@ -45,6 +47,8 @@ struct token* parseInput(char* input) {
 			if (*afterLt == '\0') return innerToken;
 			// if you switch to not mallocing input turn this to strcpy!!!
 			innerToken->redirectFrom = afterLt;
+
+			return innerToken;
 		}
 	}
 
@@ -106,4 +110,40 @@ struct token* parseInput(char* input) {
 	}
 
 	return rootToken;*/
+}
+
+void printToken(struct token* token, int level) {
+	// can break lol don't make things too big
+	char str[10000];
+	if (token->type == SEMICOLON) {
+		printTabs(level, "TOKEN TYPE: SEMICOLON\n");
+		printToken(token->children[0], level + 1);
+		printToken(token->children[1], level + 1);
+	} else if (token->type == PIPE) {
+		printTabs(level, "TOKEN TYPE: PIPE\n");
+		sprintf(str, "REDIRECT TO: %s\n", token->redirectTo);
+		if (token->redirectTo != NULL) printTabs(level, str);
+		sprintf(str, "REDIRECT FROM: %s\n", token->redirectFrom);
+		if (token->redirectFrom != NULL) printTabs(level, str);
+		printToken(token->children[0], level + 1);
+		printToken(token->children[1], level + 1);
+	} else {
+		printTabs(level, "TOKEN TYPE: COMMAND\n");
+		printTabs(level, "COMMAND: ");
+		int i = 0;
+		while (token->command[i] != NULL) printf("%s ", token->command[(i++)]);
+		printf("\n");
+		sprintf(str, "REDIRECT TO: %s\n", token->redirectTo);
+		if (token->redirectTo != NULL) printTabs(level, str);
+		sprintf(str, "REDIRECT FROM: %s\n", token->redirectFrom);
+		if (token->redirectFrom != NULL) printTabs(level, str);
+	}
+}
+
+void printTabs(int level, char* str) {
+	while (level > 0) {
+		printf("\t");
+		level--;
+	}
+	printf(str);
 }

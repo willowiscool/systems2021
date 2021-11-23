@@ -20,4 +20,7 @@ struct token {
 
 // null-terminated array
 struct token* parseInput(char* input);
+
+void printToken(struct token* token, int level);
+void printTabs(int level, char* str);
 #endif // TOKEN_H_
