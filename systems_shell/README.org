@@ -3,7 +3,7 @@
 * Features
 - Run commands with arguments (duh)
 - Separate multiple commands on one line with semicolons
-- Pipe the output of one command to another (only two commands at a time for now)
+- Pipe the output of one command to another
 - Redirection
 * Not Yet Implemented
 - Other bash builtins

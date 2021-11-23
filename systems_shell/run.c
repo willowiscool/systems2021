@@ -84,18 +84,22 @@ int runPipe(struct token* input, char* redirectTo) {
 			dup2(filedes[0], STDIN_FILENO);
 			close(filedes[1]);
 
-			if (redirectTo != NULL) {
-				dup2(open(redirectTo, O_CREAT | O_WRONLY | O_TRUNC, 0644), STDOUT_FILENO);
-			}
+			if (input->children[1]->type == PIPE) {
+				runPipe(input->children[1], redirectTo);
+			} else {
+				if (redirectTo != NULL) {
+					dup2(open(redirectTo, O_CREAT | O_WRONLY | O_TRUNC, 0644), STDOUT_FILENO);
+				}
 
-			input = input->children[1];
-			// strip beginning whitespace
-			char* command = input->command[0];
-			while (*command == ' ' || *command == '\t') command++;
-			execvp(command, input->command);
-			// something happened
-			printf("Error running %s: %s\n", input->command[0], strerror(errno));
-			exit(1);
+				input = input->children[1];
+				// strip beginning whitespace
+				char* command = input->command[0];
+				while (*command == ' ' || *command == '\t') command++;
+				execvp(command, input->command);
+				// something happened
+				printf("Error running %s: %s\n", input->command[0], strerror(errno));
+				exit(1);
+			}
 		}
 	} else {
 		int status;
@@ -126,6 +130,7 @@ struct stdinAndStdoutFDs createRedirects(struct token* input) {
 	return sasfd;
 }
 
+// Not used anywhere right now
 int undoRedirects(struct stdinAndStdoutFDs sasfd) {
 	int ret = 0;
 	if (sasfd.stdin != STDIN_FILENO) close(STDIN_FILENO);
