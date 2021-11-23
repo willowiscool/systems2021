@@ -54,7 +54,9 @@ int runPipe(struct token* input) {
 */
 
 // not using popen so we can pipe more than 2 commands
-int runPipe(struct token* input) {
+int runPipe(struct token* input, char* redirectTo) {
+	char* redirectFrom = input->redirectFrom;
+
 	int pid = fork();
 	if (pid == 0) {
 		// child
@@ -65,6 +67,10 @@ int runPipe(struct token* input) {
 		if (pid2 == 0) {
 			dup2(filedes[1], STDOUT_FILENO);
 			close(filedes[0]);
+
+			if (redirectFrom != NULL) {
+				dup2(open(redirectFrom, O_RDONLY, 0), STDIN_FILENO);
+			}
 
 			input = input->children[0];
 			// strip beginning whitespace
@@ -77,7 +83,11 @@ int runPipe(struct token* input) {
 		} else {
 			dup2(filedes[0], STDIN_FILENO);
 			close(filedes[1]);
-			createRedirects(input);
+
+			if (redirectTo != NULL) {
+				dup2(open(redirectTo, O_CREAT | O_WRONLY | O_TRUNC, 0644), STDOUT_FILENO);
+			}
+
 			input = input->children[1];
 			// strip beginning whitespace
 			char* command = input->command[0];
@@ -101,7 +111,7 @@ struct stdinAndStdoutFDs createRedirects(struct token* input) {
 	int err;
 	if (input->redirectTo != NULL) {
 		sasfd.stdout = dup(STDOUT_FILENO);
-		err = dup2(open(input->redirectTo, O_CREAT | O_WRONLY, 0644), STDOUT_FILENO);
+		err = dup2(open(input->redirectTo, O_CREAT | O_WRONLY | O_TRUNC, 0644), STDOUT_FILENO);
 		if (err == -1) {
 			printf("Error redirecting to %s: %s\n", input->redirectTo, strerror(errno));
 		}
@@ -126,7 +136,6 @@ int undoRedirects(struct stdinAndStdoutFDs sasfd) {
 }
 
 int run(struct token* input) {
-	//printToken(input, 0);
 	if (input == NULL) return 0;
 	if (input->type == SEMICOLON) {
 		run(input->children[0]);
@@ -134,7 +143,7 @@ int run(struct token* input) {
 	}
 
 	if (input->type == PIPE) {
-		int ret = runPipe(input);
+		int ret = runPipe(input, input->redirectTo);
 		return ret;
 	}
 

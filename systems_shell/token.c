@@ -13,11 +13,6 @@ struct token* parseInput(char* input) {
 	char* second = input;
 	char* first = strsep(&second, ";");
 	if (second != NULL) rootToken->type = SEMICOLON;
-	else {
-		second = input;
-		first = strsep(&second, "|");
-		if (second != NULL) rootToken->type = PIPE;
-	}
 
 	rootToken->redirectTo = NULL;
 	rootToken->redirectFrom = NULL;
@@ -50,6 +45,12 @@ struct token* parseInput(char* input) {
 
 			return innerToken;
 		}
+	}
+
+	if (rootToken->type != SEMICOLON) {
+		second = input;
+		first = strsep(&second, "|");
+		if (second != NULL) rootToken->type = PIPE;
 	}
 
 	if (rootToken->type == SEMICOLON || rootToken->type == PIPE) {

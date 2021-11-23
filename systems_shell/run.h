@@ -5,7 +5,7 @@
 
 int run(struct token* input);
 FILE* runPopen(struct token* input, char* type);
-int runPipe(struct token* input);
+int runPipe(struct token* input, char* redirectTo);
 
 struct stdinAndStdoutFDs {
 	int stdin;
