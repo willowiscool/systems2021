@@ -6,6 +6,7 @@
 - Pipe the output of one command to another
 - Redirection
 - Using quotes and backslashes to allow spaces and quotes in arguments (i.e. ~"a b"~ is the same as ~a\ b~ and ~'a b'~)
+- Resolve ~~~
 * Not Yet Implemented
 - Other bash builtins
 * Known Bugs

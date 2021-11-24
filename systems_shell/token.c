@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <pwd.h>
+#include <unistd.h>
 
 struct token* parseInput(char* input) {
 	if (input == NULL || *input == '\0') return NULL;
@@ -168,8 +170,24 @@ struct token* parseInput(char* input) {
 	// collapse last arg
 	c->c = '\0';
 	c->nextChar = NULL;
-	currArg->str = malloc(sizeof(char) * (length + 1));
-	char* argStr = currArg->str;
+	char* argStr;
+	if (firstC->c == '~' && (firstC->nextChar->c == '\0' || firstC->nextChar->c == '/')) {
+		char* homedir = getenv("HOME");
+		if (homedir == NULL) {
+			homedir = getpwuid(getuid())->pw_dir;
+		}
+
+		currArg->str = malloc(sizeof(char) * (length + strlen(homedir) + 1));
+		strcpy(currArg->str, homedir);
+		argStr = currArg->str + strlen(homedir);
+
+		struct charll* nextC = firstC->nextChar;
+		free(firstC);
+		firstC = nextC;
+	} else {
+		currArg->str = malloc(sizeof(char) * (length + 1));
+		argStr = currArg->str;
+	}
 	while (firstC != NULL) {
 		*argStr = firstC->c;
 		argStr++;
