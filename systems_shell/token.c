@@ -16,11 +16,19 @@ struct token* parseInput(char* input) {
 
 	rootToken->redirectTo = NULL;
 	rootToken->redirectFrom = NULL;
+	rootToken->append = 0;
 
 	if (rootToken->type != SEMICOLON) {
 		char* afterGt = input;
 		char* beforeGt = strsep(&afterGt, ">");
 		if (afterGt != NULL) {
+			int append = 0;
+			if (*afterGt == '>') {
+				append = 1;
+				*afterGt = '\0';
+				afterGt++;
+			}
+
 			free(rootToken);
 			struct token* innerToken = parseInput(beforeGt);
 			while (*afterGt != '\0' && (*afterGt == ' ' || *afterGt == '\t')) afterGt++;
@@ -28,6 +36,7 @@ struct token* parseInput(char* input) {
 			if (*afterGt == '\0') return innerToken;
 			// if you switch to not mallocing input turn this to strcpy!!!
 			innerToken->redirectTo = afterGt;
+			innerToken->append = append;
 
 			return innerToken;
 		}

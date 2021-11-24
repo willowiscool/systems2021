@@ -114,8 +114,11 @@ struct stdinAndStdoutFDs createRedirects(struct token* input) {
 	sasfd.stdout = STDOUT_FILENO;
 	int err;
 	if (input->redirectTo != NULL) {
+		int flags = O_CREAT | O_WRONLY;
+		if (input->append) flags |= O_APPEND;
+		else flags |= O_TRUNC;
 		sasfd.stdout = dup(STDOUT_FILENO);
-		err = dup2(open(input->redirectTo, O_CREAT | O_WRONLY | O_TRUNC, 0644), STDOUT_FILENO);
+		err = dup2(open(input->redirectTo, flags, 0644), STDOUT_FILENO);
 		if (err == -1) {
 			printf("Error redirecting to %s: %s\n", input->redirectTo, strerror(errno));
 		}

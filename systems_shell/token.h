@@ -16,6 +16,8 @@ struct token {
 	char* beginningOfStrPtr;
 	char* redirectTo;
 	char* redirectFrom;
+	// bool
+	int append;
 };
 
 // null-terminated array
