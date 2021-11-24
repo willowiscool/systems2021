@@ -20,6 +20,16 @@ struct token {
 	int append;
 };
 
+struct arg {
+	char* str;
+	struct arg* nextArg;
+};
+
+struct charll {
+	char c;
+	struct charll* nextChar;
+};
+
 // null-terminated array
 struct token* parseInput(char* input);
 

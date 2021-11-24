@@ -37,7 +37,6 @@ struct token* parseInput(char* input) {
 			// if you switch to not mallocing input turn this to strcpy!!!
 			innerToken->redirectTo = afterGt;
 			innerToken->append = append;
-
 			return innerToken;
 		}
 		// copy paste for the win
@@ -83,6 +82,7 @@ struct token* parseInput(char* input) {
 	end++;
 	*end = '\0';
 
+	/*
 	// count spaces
 	int spaces = 0;
 	char* incount = input;
@@ -108,18 +108,94 @@ struct token* parseInput(char* input) {
 	rootToken->command = spaced;
 
 	return rootToken;
+	*/
 
-	/*struct token* currToken = rootToken;
-	while (input != NULL) {
-		currToken->type = TEXT;
-		strcpy(currToken->token, strsep(&input, " "));
-		currToken->children = malloc(sizeof(struct token*));
-		struct token* nextToken = malloc(sizeof(struct token));
-		currToken->children = &nextToken;
-		currToken = nextToken;
+	// count arguments
+	int numArgs = 1;
+	char* incount = input;
+	// 0 = not in a quote
+	// 1 = in single quote
+	// 2 = in double quote
+	int inQuote = 0;
+	int backslashed = 0;
+	int length = 0;
+
+	struct arg* firstArg = malloc(sizeof(struct arg));
+	struct arg* currArg = firstArg;
+
+	struct charll* firstC = malloc(sizeof(struct charll));
+	struct charll* c = firstC;
+	while (*incount != '\0') {
+		if (*incount == ' ' && inQuote == 0 && !backslashed) {
+			// time to collapse
+			c->c = '\0';
+			c->nextChar = NULL;
+			currArg->str = malloc(sizeof(char) * (length + 1));
+			char* argStr = currArg->str;
+			while (firstC != NULL) {
+				*argStr = firstC->c;
+				argStr++;
+				struct charll* nextC = firstC->nextChar;
+				free(firstC);
+				firstC = nextC;
+			}
+			length = 0;
+
+			firstC = malloc(sizeof(struct charll));
+			c = firstC;
+
+			currArg->nextArg = malloc(sizeof(struct arg));
+			currArg = currArg->nextArg;
+			numArgs++;
+			while (*(incount + 1) == ' ') incount++;
+		} else if (*incount == '\\' && !backslashed) {
+			backslashed = 1;
+		} else if (*incount == '\'' && inQuote != 2 && !backslashed) {
+			if (inQuote == 1) inQuote = 0;
+			if (inQuote == 0) inQuote = 1;
+		} else if (*incount == '"' && inQuote != 1 && !backslashed) {
+			if (inQuote == 2) inQuote = 0;
+			if (inQuote == 0) inQuote = 2;
+		} else {
+			backslashed = 0;
+			length++;
+			c->c = *incount;
+			c->nextChar = malloc(sizeof(struct charll));
+			c = c->nextChar;
+		}
+		incount++;
+	}
+	// collapse last arg
+	c->c = '\0';
+	c->nextChar = NULL;
+	currArg->str = malloc(sizeof(char) * (length + 1));
+	char* argStr = currArg->str;
+	while (firstC != NULL) {
+		*argStr = firstC->c;
+		argStr++;
+		struct charll* nextC = firstC->nextChar;
+		free(firstC);
+		firstC = nextC;
+	}
+	currArg->nextArg = NULL;
+
+	char** args = malloc(sizeof(char*) * (numArgs + 1));
+	currArg = firstArg;
+	int i;
+	for (i = 0; i < numArgs; i++) {
+		// stays allocated
+		args[i] = currArg->str;
+		struct arg* nextArg = currArg->nextArg;
+		free(currArg);
+		currArg = nextArg;
 	}
 
-	return rootToken;*/
+	args[i] = NULL;
+
+	rootToken->command = args;
+	//printToken(rootToken, 0);
+
+	return rootToken;
 }
 
 void printToken(struct token* token, int level) {
@@ -141,7 +217,7 @@ void printToken(struct token* token, int level) {
 		printTabs(level, "TOKEN TYPE: COMMAND\n");
 		printTabs(level, "COMMAND: ");
 		int i = 0;
-		while (token->command[i] != NULL) printf("%s ", token->command[(i++)]);
+		while (token->command[i] != NULL) printf("\"%s\" ", token->command[(i++)]);
 		printf("\n");
 		sprintf(str, "REDIRECT TO: %s\n", token->redirectTo);
 		if (token->redirectTo != NULL) printTabs(level, str);

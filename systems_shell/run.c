@@ -10,49 +10,6 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
-
-/*
-FILE* runPopen(struct token* input, char* type) {
-	// reconstruct command
-	// assume input type is COMMAND
-	int size = 0;
-	char** end = input->command;
-	while (*end != NULL) {
-		size += strlen(*end) + 1;
-		end++;
-	}
-	char command[size];
-	char* ptr = command;
-	char** arg = input->command;
-	while (*arg != NULL) {
-		strcpy(ptr, *arg);
-		ptr += strlen(*arg);
-		*ptr = ' ';
-		ptr++;
-		arg++;
-	}
-	*(ptr - 1) = '\0';
-
-	return popen(command, type);
-}
-
-int runPipe(struct token* input) {
-	// for now assume only two pipe commands
-	// TODO: more pipes
-	FILE* readFrom = runPopen(input->children[0], "r");
-	FILE* writeTo = runPopen(input->children[1], "w");
-	int fd[2];
-	fd[0] = fileno(readFrom);
-	fd[1] = fileno(writeTo);
-	/*fd[0] = fileno(writeTo);
-	fd[1] = fileno(readFrom);
-	pipe(fd);
-	pclose(writeTo);
-	pclose(readFrom);
-	return 0; // TODO TODO TODO
-}
-*/
-
 // not using popen so we can pipe more than 2 commands
 int runPipe(struct token* input, char* redirectTo) {
 	char* redirectFrom = input->redirectFrom;
