@@ -11,6 +11,7 @@
 - Other bash builtins
 * Known Bugs
 - In other shells, ~>~ takes precedence over ~|~ but ~<~ does not. In this shell, ~>~ and ~<~ both take precedence over ~|~, such that running the command ~cat | cat < test~ in this shell is equivalent to running ~cat < test | cat~ in other shells.
+- Not closing quotes results in a segfault
 * Copy of every function header
 #+begin_src C
 char* getInput();
