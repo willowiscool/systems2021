@@ -1,0 +1,65 @@
+#include "server.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <time.h>
+#include <sys/stat.h>
+#include <string.h>
+
+int main() {
+	srand(time(NULL));
+
+	time_t timeGenerated;
+	printf("Daily word: %s\n", getWord(&timeGenerated));
+	printf("Word generated: %s\n", ctime(&timeGenerated));
+	return 0;
+}
+
+char* getWord(time_t* timeGenerated) {
+	struct stat dailyStat;
+	int exists = stat("./daily_word.txt", &dailyStat);
+	time_t now = time(NULL);
+	// exists != 0 -> it doesn't exist
+	// time_t is number of seconds since epoch
+	if (exists != 0 || now - dailyStat.st_mtime > 24 * 60 * 60) {
+		struct stat answerStat;
+		int err = stat("./answer_words.txt", &answerStat);
+		if (err != 0) {
+			printf("Answer words file not found.\n");
+			exit(1);
+		}
+		char* answerWords = malloc(answerStat.st_size);
+		int answers = open("./answer_words.txt", O_RDONLY, 0);
+		read(answers, answerWords, answerStat.st_size);
+		close(answers);
+
+		int numWords = 0;
+		char* ptr = answerWords;
+		// NOTE: assumes that first char is not a newline
+		while (*(ptr++) != '\0')
+			if (*ptr == '\n') numWords++;
+
+		// NOTE: assumes five-letter words and a new line to separate them
+		int index = (rand() % numWords) * 6;
+
+		char* word = malloc(6);
+		strncpy(word, (answerWords + index), 5);
+		word[5] = '\0';
+		*timeGenerated = time(NULL);
+
+		free(answerWords);
+
+		int daily = open("./daily_word.txt", O_RDWR | O_TRUNC | O_CREAT, 0644);
+		write(daily, word, 6);
+		close(daily);
+		return word;
+	}
+	int daily = open("./daily_word.txt", O_RDONLY, 0);
+	*timeGenerated = dailyStat.st_mtime;
+	char* word = malloc(dailyStat.st_size);
+	read(daily, word, dailyStat.st_size);
+	close(daily);
+	if (word[dailyStat.st_size - 1] == '\n') word[dailyStat.st_size - 1] = '\0';
+	return word;
+}
