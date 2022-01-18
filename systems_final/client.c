@@ -6,8 +6,25 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
 
 int main(int argc, char* argv[]) {
+	// GET POSSIBLE WORDS
+	struct stat posStat;
+	int err = stat("./all_words.txt", &posStat);
+	if (err != 0) {
+		printf("Error reading possible words: %s\n", strerror(errno));
+		return 1;
+	};
+	char* posWords = malloc(posStat.st_size);
+	int pos = open("./all_words.txt", O_RDONLY, 0);
+	read(pos, posWords, posStat.st_size);
+	close(pos);
+
+	// CONNECT TO SERVER
 	struct addrinfo* hints, * results;
 	hints = calloc(1, sizeof(struct addrinfo));
 	hints->ai_family = AF_INET;
@@ -21,11 +38,60 @@ int main(int argc, char* argv[]) {
 	free(hints);
 	freeaddrinfo(results);
 
+	// READ FROM SERVER
 	struct message msg;
 	read(sd, &msg, sizeof(msg));
 
-/*	char guess[7];
-	printf("Guess: ");
-	fgets(guess, 7, stdin);
-	printf("Guess: [%s]\n", guess);*/
+	int guesses = 6;
+
+	char guess[1000];
+	while (guesses > 0) {
+		printf("Guess: ");
+		fgets(guess, 1000, stdin);
+		int i;
+		if (guess[5] == '\n') guess[5] = '\0';
+		if (strlen(guess) != 5 || guess[4] == '\n') {
+			printf("Guess must be 5 letters long!\n");
+			continue;
+		}
+
+		// Check possible words
+		char* posWord = posWords;
+		int foundWord = 0;
+		while (*posWord != '\0' && *posWord != '\n') {
+			if (strncmp(posWord, guess, 5) == 0) foundWord = 1;
+			posWord += 6;
+		}
+		if (!foundWord) {
+			printf("Guess not in word list!\n");
+			continue;
+		}
+
+		if (strcmp(guess, msg.word) == 0) {
+			printf("\033[42m%s\033[m\n", guess);
+			break;
+		}
+		char outOfPlaceLetters[6];
+		strncpy(outOfPlaceLetters, msg.word, 6);
+		for (i = 0; i < 5; i++) {
+			if (guess[i] == msg.word[i]) {
+				printf("\033[42m%c\033[m", guess[i]);
+				outOfPlaceLetters[i] = '\0';
+			} else {
+				int printed = 0;
+				int j;
+				for (j = 0; j < 5; j++) {
+					if (guess[i] == outOfPlaceLetters[j]) {
+						printf("\033[43m%c\033[m", guess[i]);
+						outOfPlaceLetters[j] = '\0';
+						printed = 1;
+					}
+				}
+				if (!printed) printf("%c", guess[i]);
+			}
+		}
+		printf("\n");
+		guesses--;
+	}
+	if (guesses == 0) printf("The word was %s. Better luck tomorrow!\n", msg.word);
 }
