@@ -1,5 +1,5 @@
 //#include "client.h"
-#include "message.h"
+#include "types.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -93,5 +93,79 @@ int main(int argc, char* argv[]) {
 		printf("\n");
 		guesses--;
 	}
-	if (guesses == 0) printf("The word was %s. Better luck tomorrow!\n", msg.word);
+	printf("Guesses: %d\n", guesses);
+	if (guesses == 0) printf("The word was %s.\n", msg.word);
+
+	struct stat statStat;
+	err = stat("./client_stats.bin", &statStat);
+	struct stats stats;
+	int statsFd = open("./client_stats.bin", O_RDWR | O_CREAT, 0644);
+	if (err == 0) {
+		read(statsFd, &stats, sizeof(stats));
+		stats.played++;
+		if (guesses == 0) {
+			stats.streak = 0;
+		} else {
+			stats.streak++;
+			stats.won++;
+			if (stats.streak >= stats.maxStreak) stats.maxStreak = stats.streak;
+			stats.guessDistribution[6 - guesses]++;
+		}
+	} else {
+		// cba to loop
+		stats.guessDistribution[0] = 0;
+		stats.guessDistribution[1] = 0;
+		stats.guessDistribution[2] = 0;
+		stats.guessDistribution[3] = 0;
+		stats.guessDistribution[4] = 0;
+		stats.guessDistribution[5] = 0;
+
+		stats.played = 1;
+		if (guesses == 0) {
+			stats.streak = 0;
+			stats.maxStreak = 0;
+			stats.won = 0;
+		} else {
+			stats.streak = 1;
+			stats.maxStreak = 1;
+			stats.won = 1;
+			stats.guessDistribution[6 - guesses]++;
+		}
+	}
+	lseek(statsFd, 0, SEEK_SET);
+	write(statsFd, &stats, sizeof(stats));
+
+	printf("\nStatistics:\n");
+	// TODO make fancy guess distribution
+	printf("Guess distribution: \n");
+	printf("\t1 guess:\t%d\n", stats.guessDistribution[0]);
+	printf("\t2 guesses:\t%d\n", stats.guessDistribution[1]);
+	printf("\t3 guesses:\t%d\n", stats.guessDistribution[2]);
+	printf("\t4 guesses:\t%d\n", stats.guessDistribution[3]);
+	printf("\t5 guesses:\t%d\n", stats.guessDistribution[4]);
+	printf("\t6 guesses:\t%d\n", stats.guessDistribution[5]);
+	printf("Number of times played: %d\n", stats.played);
+	printf("Percent won: %.2f%%\n", (float)stats.won / stats.played * 100);
+	printf("Streak: %d\n", stats.streak);
+	printf("Max streak: %d\n", stats.maxStreak);
+
+	// send to server
+
+	msg.guesses = 6 - guesses; // zero-indexed
+	msg.stats = stats;
+	write(sd, &msg, sizeof(msg));
+
+	// get total stats from server
+	read(sd, &msg, sizeof(msg));
+	printf("\nGame-wide statistics:\n");
+	printf("Guess distribution: \n");
+	printf("\t1 guess:\t%d\n", msg.stats.guessDistribution[0]);
+	printf("\t2 guesses:\t%d\n", msg.stats.guessDistribution[1]);
+	printf("\t3 guesses:\t%d\n", msg.stats.guessDistribution[2]);
+	printf("\t4 guesses:\t%d\n", msg.stats.guessDistribution[3]);
+	printf("\t5 guesses:\t%d\n", msg.stats.guessDistribution[4]);
+	printf("\t6 guesses:\t%d\n", msg.stats.guessDistribution[5]);
+	printf("Number of times played: %d\n", msg.stats.played);
+	printf("Percent won: %.2f%%\n", (float)msg.stats.won / msg.stats.played * 100);
+	printf("Max streak: %d\n", msg.stats.maxStreak);
 }

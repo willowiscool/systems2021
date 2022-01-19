@@ -1,5 +1,5 @@
 #include "server.h"
-#include "message.h"
+#include "types.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -54,10 +54,52 @@ int main() {
 		if (pid == 0) break;
 	}
 
-	// for now, just send word and exit
+	// send word
 	struct message msg;
 	strcpy(msg.word, word);
 	free(word);
+	write(srvfd, &msg, sizeof(msg));
+
+	// get stats
+	// TODO consolidate reading stats into one func??
+	read(srvfd, &msg, sizeof(msg));
+	struct stat statStat;
+	int exists = stat("./server_stats.bin", &statStat);
+	struct stats stats;
+	int statsFd = open("./server_stats.bin", O_RDWR | O_CREAT, 0644);
+	if (exists == 0) { // exists
+		read(statsFd, &stats, sizeof(stats));
+		stats.played++;
+		if (msg.guesses != 6) {
+			// server stats does not track streak, only maxStreak
+			stats.won++;
+			if (msg.stats.maxStreak > stats.maxStreak) stats.maxStreak = msg.stats.maxStreak;
+			stats.guessDistribution[msg.guesses]++;
+		}
+	} else {
+		// cba to loop
+		stats.guessDistribution[0] = 0;
+		stats.guessDistribution[1] = 0;
+		stats.guessDistribution[2] = 0;
+		stats.guessDistribution[3] = 0;
+		stats.guessDistribution[4] = 0;
+		stats.guessDistribution[5] = 0;
+
+		stats.played = 1;
+		if (msg.guesses != 6) {
+			stats.maxStreak = 1;
+			stats.won = 1;
+		} else {
+			stats.maxStreak = 0;
+			stats.won = 0;
+		}
+	}
+	lseek(statsFd, 0, SEEK_SET);
+	write(statsFd, &stats, sizeof(stats));
+
+	// TODO daily statistics?
+	// send back to client
+	msg.stats = stats;
 	write(srvfd, &msg, sizeof(msg));
 
 	return 0;
