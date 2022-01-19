@@ -1,5 +1,7 @@
 //#include "client.h"
 #include "types.h"
+#include <curses.h>
+#include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -42,59 +44,143 @@ int main(int argc, char* argv[]) {
 	struct message msg;
 	read(sd, &msg, sizeof(msg));
 
-	int guesses = 6;
+	// init ncurses, clear screen, and make board
+	setlocale(LC_ALL, "UTF-8");
+	initscr();
+	start_color();
+	// 0 is default, 1 is yellow, 2 is green
+	init_pair(1, COLOR_WHITE, COLOR_YELLOW);
+	init_pair(2, COLOR_WHITE, COLOR_GREEN);
+	scrollok(stdscr, TRUE);
+	cbreak();
+	noecho();
+	curs_set(0);
+	clear();
+	addstr("= W O R D L E =\n");
+	int i;
+	int j;
+	for (i = 0; i < 6; i++) {
+		for (j = 0; j < 5; j++) {
+			addch(ACS_ULCORNER);
+			addch(ACS_HLINE);
+			addch(ACS_URCORNER);
+		}
+		addch('\n');
+		for (j = 0; j < 5; j++) {
+			addch(ACS_VLINE);
+			addch(' ');
+			addch(ACS_VLINE);
+		}
+		addch('\n');
+		for (j = 0; j < 5; j++) {
+			addch(ACS_LLCORNER);
+			addch(ACS_HLINE);
+			addch(ACS_LRCORNER);
+		}
+		addch('\n');
+		/* can't do this because curses is weird with box chars
+		printw("┌─┐┌─┐┌─┐┌─┐┌─┐\n");
+		printw("│ ││ ││ ││ ││ │\n");
+		printw("└─┘└─┘└─┘└─┘└─┘\n");*/
+	}
+	move(2, 1);
 
-	char guess[1000];
-	while (guesses > 0) {
-		printf("Guess: ");
-		fgets(guess, 1000, stdin);
+	int guesses = 0;
+	while (guesses < 6) {
 		int i;
-		if (guess[5] == '\n') guess[5] = '\0';
-		if (strlen(guess) != 5 || guess[4] == '\n') {
-			printf("Guess must be 5 letters long!\n");
-			continue;
+		int message = 0;
+		int letter = 0;
+		char guess[6];
+		guess[5] = '\0';
+		while (1) {
+			int ch = getch();
+			if (ch == KEY_ENTER || ch == '\n') {
+				if (letter != 5) {
+					move(2 + guesses * 3, 16);
+					addstr("Not enough letters");
+					message = 1;
+					continue;
+				}
+				// Check possible words
+				char* posWord = posWords;
+				int foundWord = 0;
+				while (*posWord != '\0' && *posWord != '\n') {
+					if (strncmp(posWord, guess, 5) == 0) foundWord = 1;
+					posWord += 6;
+				}
+				if (!foundWord) {
+					move(2 + guesses * 3, 16);
+					addstr("Not in word list");
+					message = 1;
+					continue;
+				}
+				break;
+			}
+			// apparently the backspace return depends on platform???
+			if ((ch == KEY_BACKSPACE || ch == 127 || ch == '\b') && letter > 0) {
+				letter--;
+				move(2 + guesses * 3, 1 + letter * 3);
+				addch(' '); // after adding a character, cursor moves automatically
+			}
+			if (letter >= 5) continue;
+			if (ch >= 97 && ch <= 122) ch -= 32;
+			if (ch >= 65 && ch <= 90) {
+				move(2 + guesses * 3, 1 + letter * 3);
+				addch(ch);
+				guess[letter] = ch;
+				letter++;
+				if (message) {
+					move(2 + guesses * 3, 16);
+					clrtoeol();
+					message = 0;
+				}
+			}
 		}
-
-		// Check possible words
-		char* posWord = posWords;
-		int foundWord = 0;
-		while (*posWord != '\0' && *posWord != '\n') {
-			if (strncmp(posWord, guess, 5) == 0) foundWord = 1;
-			posWord += 6;
-		}
-		if (!foundWord) {
-			printf("Guess not in word list!\n");
-			continue;
-		}
-
 		if (strcmp(guess, msg.word) == 0) {
-			printf("\033[42m%s\033[m\n", guess);
+			move(2 + guesses * 3, 16);
+			move(1 + guesses * 3, 0);
+			chgat(15, A_BOLD, 2, NULL);
+			move(2 + guesses * 3, 0);
+			chgat(15, A_BOLD, 2, NULL);
+			move(3 + guesses * 3, 0);
+			chgat(15, A_BOLD, 2, NULL);
 			break;
 		}
+
 		char outOfPlaceLetters[6];
 		strncpy(outOfPlaceLetters, msg.word, 6);
 		for (i = 0; i < 5; i++) {
 			if (guess[i] == msg.word[i]) {
-				printf("\033[42m%c\033[m", guess[i]);
+				move(1 + guesses * 3, i * 3);
+				chgat(3, A_BOLD, 2, NULL);
+				move(2 + guesses * 3, i * 3);
+				chgat(3, A_BOLD, 2, NULL);
+				move(3 + guesses * 3, i * 3);
+				chgat(3, A_BOLD, 2, NULL);
 				outOfPlaceLetters[i] = '\0';
 			} else {
-				int printed = 0;
 				int j;
 				for (j = 0; j < 5; j++) {
 					if (guess[i] == outOfPlaceLetters[j]) {
-						printf("\033[43m%c\033[m", guess[i]);
+						move(1 + guesses * 3, i * 3);
+						chgat(3, A_BOLD, 1, NULL);
+						move(2 + guesses * 3, i * 3);
+						chgat(3, A_BOLD, 1, NULL);
+						move(3 + guesses * 3, i * 3);
+						chgat(3, A_BOLD, 1, NULL);
 						outOfPlaceLetters[j] = '\0';
-						printed = 1;
 					}
 				}
-				if (!printed) printf("%c", guess[i]);
 			}
 		}
-		printf("\n");
-		guesses--;
+		guesses++;
 	}
-	printf("Guesses: %d\n", guesses);
-	if (guesses == 0) printf("The word was %s.\n", msg.word);
+	move(19, 0);
+	printw("Guesses: %d\n", guesses + 1);
+	if (guesses == 0) printw("The word was %s.\n", msg.word);
+	printw("Press any key to continue\n");
+	getch();
+	clear();
 
 	struct stat statStat;
 	err = stat("./client_stats.bin", &statStat);
@@ -103,13 +189,13 @@ int main(int argc, char* argv[]) {
 	if (err == 0) {
 		read(statsFd, &stats, sizeof(stats));
 		stats.played++;
-		if (guesses == 0) {
+		if (guesses == 6) {
 			stats.streak = 0;
 		} else {
 			stats.streak++;
 			stats.won++;
 			if (stats.streak >= stats.maxStreak) stats.maxStreak = stats.streak;
-			stats.guessDistribution[6 - guesses]++;
+			stats.guessDistribution[guesses]++;
 		}
 	} else {
 		// cba to loop
@@ -121,7 +207,7 @@ int main(int argc, char* argv[]) {
 		stats.guessDistribution[5] = 0;
 
 		stats.played = 1;
-		if (guesses == 0) {
+		if (guesses == 6) {
 			stats.streak = 0;
 			stats.maxStreak = 0;
 			stats.won = 0;
@@ -129,43 +215,49 @@ int main(int argc, char* argv[]) {
 			stats.streak = 1;
 			stats.maxStreak = 1;
 			stats.won = 1;
-			stats.guessDistribution[6 - guesses]++;
+			stats.guessDistribution[guesses]++;
 		}
 	}
 	lseek(statsFd, 0, SEEK_SET);
 	write(statsFd, &stats, sizeof(stats));
 
-	printf("\nStatistics:\n");
+	printw("Statistics:\n");
 	// TODO make fancy guess distribution
-	printf("Guess distribution: \n");
-	printf("\t1 guess:\t%d\n", stats.guessDistribution[0]);
-	printf("\t2 guesses:\t%d\n", stats.guessDistribution[1]);
-	printf("\t3 guesses:\t%d\n", stats.guessDistribution[2]);
-	printf("\t4 guesses:\t%d\n", stats.guessDistribution[3]);
-	printf("\t5 guesses:\t%d\n", stats.guessDistribution[4]);
-	printf("\t6 guesses:\t%d\n", stats.guessDistribution[5]);
-	printf("Number of times played: %d\n", stats.played);
-	printf("Percent won: %.2f%%\n", (float)stats.won / stats.played * 100);
-	printf("Streak: %d\n", stats.streak);
-	printf("Max streak: %d\n", stats.maxStreak);
+	printw("Guess distribution: \n");
+	printw("\t1 guess:\t%d\n", stats.guessDistribution[0]);
+	printw("\t2 guesses:\t%d\n", stats.guessDistribution[1]);
+	printw("\t3 guesses:\t%d\n", stats.guessDistribution[2]);
+	printw("\t4 guesses:\t%d\n", stats.guessDistribution[3]);
+	printw("\t5 guesses:\t%d\n", stats.guessDistribution[4]);
+	printw("\t6 guesses:\t%d\n", stats.guessDistribution[5]);
+	printw("Number of times played: %d\n", stats.played);
+	printw("Percent won: %.2f%%\n", (float)stats.won / stats.played * 100);
+	printw("Streak: %d\n", stats.streak);
+	printw("Max streak: %d\n", stats.maxStreak);
+	printw("Press any key to continue.\n");
+	getch();
 
 	// send to server
 
-	msg.guesses = 6 - guesses; // zero-indexed
+	msg.guesses = guesses; // zero-indexed
 	msg.stats = stats;
 	write(sd, &msg, sizeof(msg));
 
 	// get total stats from server
 	read(sd, &msg, sizeof(msg));
-	printf("\nGame-wide statistics:\n");
-	printf("Guess distribution: \n");
-	printf("\t1 guess:\t%d\n", msg.stats.guessDistribution[0]);
-	printf("\t2 guesses:\t%d\n", msg.stats.guessDistribution[1]);
-	printf("\t3 guesses:\t%d\n", msg.stats.guessDistribution[2]);
-	printf("\t4 guesses:\t%d\n", msg.stats.guessDistribution[3]);
-	printf("\t5 guesses:\t%d\n", msg.stats.guessDistribution[4]);
-	printf("\t6 guesses:\t%d\n", msg.stats.guessDistribution[5]);
-	printf("Number of times played: %d\n", msg.stats.played);
-	printf("Percent won: %.2f%%\n", (float)msg.stats.won / msg.stats.played * 100);
-	printf("Max streak: %d\n", msg.stats.maxStreak);
+	printw("\nGame-wide statistics:\n");
+	printw("Guess distribution: \n");
+	printw("\t1 guess:\t%d\n", msg.stats.guessDistribution[0]);
+	printw("\t2 guesses:\t%d\n", msg.stats.guessDistribution[1]);
+	printw("\t3 guesses:\t%d\n", msg.stats.guessDistribution[2]);
+	printw("\t4 guesses:\t%d\n", msg.stats.guessDistribution[3]);
+	printw("\t5 guesses:\t%d\n", msg.stats.guessDistribution[4]);
+	printw("\t6 guesses:\t%d\n", msg.stats.guessDistribution[5]);
+	printw("Number of times played: %d\n", msg.stats.played);
+	printw("Percent won: %.2f%%\n", (float)msg.stats.won / msg.stats.played * 100);
+	printw("Max streak: %d\n", msg.stats.maxStreak);
+
+	printw("Press any key to exit.\n");
+	getch();
+	endwin();
 }

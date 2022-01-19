@@ -1,6 +1,8 @@
+CFLAGS = -lncurses
+
 all: server.o client.o
-	gcc -o server server.o
-	gcc -o client client.o
+	gcc -o server ${CFLAGS} server.o
+	gcc -o client ${CFLAGS} client.o
 
 server.o: server.c server.h types.h
 	gcc -c server.c server.h types.h
