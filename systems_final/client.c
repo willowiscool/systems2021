@@ -139,11 +139,20 @@ int main(int argc, char* argv[]) {
 		if (strcmp(guess, msg.word) == 0) {
 			move(2 + guesses * 3, 16);
 			move(1 + guesses * 3, 0);
-			chgat(15, A_BOLD, 2, NULL);
+			chgat(15, A_BOLD | A_ALTCHARSET, 2, NULL);
+			// If I don't have A_ALTCHARSET, the box chars become random letters
+			// If I do have it, some of the normal letters become not letters
+			// solution: replace guess
 			move(2 + guesses * 3, 0);
-			chgat(15, A_BOLD, 2, NULL);
+			chgat(15, A_BOLD | A_ALTCHARSET, 2, NULL);
+
+			for (i = 0; i < 5; i++) {
+				move(2 + guesses * 3, 1 + i * 3);
+				addch(guess[i] | A_BOLD | COLOR_PAIR(2));
+			}
+
 			move(3 + guesses * 3, 0);
-			chgat(15, A_BOLD, 2, NULL);
+			chgat(15, A_BOLD | A_ALTCHARSET, 2, NULL);
 			break;
 		}
 
@@ -152,22 +161,28 @@ int main(int argc, char* argv[]) {
 		for (i = 0; i < 5; i++) {
 			if (guess[i] == msg.word[i]) {
 				move(1 + guesses * 3, i * 3);
-				chgat(3, A_BOLD, 2, NULL);
+				chgat(3, A_BOLD | A_ALTCHARSET, 2, NULL);
 				move(2 + guesses * 3, i * 3);
-				chgat(3, A_BOLD, 2, NULL);
+				chgat(3, A_BOLD | A_ALTCHARSET, 2, NULL);
+				// have to replace letter---see above
+				move(2 + guesses * 3, 1 + i * 3);
+				addch(guess[i] | A_BOLD | COLOR_PAIR(2));
 				move(3 + guesses * 3, i * 3);
-				chgat(3, A_BOLD, 2, NULL);
+				chgat(3, A_BOLD | A_ALTCHARSET, 2, NULL);
 				outOfPlaceLetters[i] = '\0';
 			} else {
 				int j;
 				for (j = 0; j < 5; j++) {
 					if (guess[i] == outOfPlaceLetters[j]) {
 						move(1 + guesses * 3, i * 3);
-						chgat(3, A_BOLD, 1, NULL);
+						chgat(3, A_BOLD | A_ALTCHARSET, 1, NULL);
 						move(2 + guesses * 3, i * 3);
-						chgat(3, A_BOLD, 1, NULL);
+						chgat(3, A_BOLD | A_ALTCHARSET, 1, NULL);
+						// have to replace letter---see above
+						move(2 + guesses * 3, 1 + i * 3);
+						addch(guess[i] | A_BOLD | COLOR_PAIR(1));
 						move(3 + guesses * 3, i * 3);
-						chgat(3, A_BOLD, 1, NULL);
+						chgat(3, A_BOLD | A_ALTCHARSET, 1, NULL);
 						outOfPlaceLetters[j] = '\0';
 					}
 				}
