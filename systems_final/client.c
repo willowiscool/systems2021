@@ -37,7 +37,11 @@ int main(int argc, char* argv[]) {
 	else getaddrinfo(NULL, "8080", hints, &results);
 
 	int sd = socket(results->ai_family, results->ai_socktype, results->ai_protocol);
-	connect(sd, results->ai_addr, results->ai_addrlen);
+	err = connect(sd, results->ai_addr, results->ai_addrlen);
+	if (err != 0) {
+		printf("Error connecting to the server: %s\n", strerror(errno));
+		return 1;
+	}
 	free(hints);
 	freeaddrinfo(results);
 
