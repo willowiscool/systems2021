@@ -1,0 +1,64 @@
+commit 855b753b83589259f1140c5cba389c40826899f1
+Author: Willow Veytsman <vityavv@gmail.com>
+Date:   Fri Jan 21 11:26:46 2022 -0500
+
+    Made client only work once/day + small improvements
+    
+    - Added utils file to consolidate some code
+    - Added stuff to gitignore
+
+commit 67e9a45de19de9905ab596b6d6acef69c13d772b
+Author: Willow Veytsman <vityavv@gmail.com>
+Date:   Thu Jan 20 11:31:34 2022 -0500
+
+    Fix compile bug on stuy computers
+
+commit 65e309d970a6c37f5ec8b87038cb4d0f2425bcb4
+Author: Willow Veytsman <vityavv@gmail.com>
+Date:   Thu Jan 20 11:15:10 2022 -0500
+
+    fix stupid special char bug
+
+commit b912dcb766e08e4e721825c016258302768b8c5d
+Author: Willow Veytsman <vityavv@gmail.com>
+Date:   Wed Jan 19 14:24:07 2022 -0500
+
+    Add ncurses-based client gui.
+    
+    BUG: coloring boxes breaks box characters.
+
+commit 569ed950769de85633b14f2332dba59371378ec2
+Author: Willow Veytsman <vityavv@gmail.com>
+Date:   Wed Jan 19 11:39:53 2022 -0500
+
+    Add statistics per-client and game-wide.
+
+commit be3b3ff47c4b3f89e62e6a0e28b16e3794fe18ee
+Author: Willow Veytsman <vityavv@gmail.com>
+Date:   Tue Jan 18 13:59:26 2022 -0500
+
+    basic client
+
+commit 38fa03f1d1742783e4fa9ba81106e4c05df9625e
+Author: Willow Veytsman <vityavv@gmail.com>
+Date:   Tue Jan 18 11:34:52 2022 -0500
+
+    Code for server/client
+
+commit 104b5704d56ebfb14233feaa541138012ad77be1
+Author: Willow Veytsman <vityavv@gmail.com>
+Date:   Fri Jan 14 11:38:39 2022 -0500
+
+    Word choosing code
+
+commit 6e3089126c65ec54805fc52b173a3e46ded8a999
+Author: Willow Veytsman <vityavv@gmail.com>
+Date:   Wed Jan 12 11:44:20 2022 -0500
+
+    Add words to repo
+
+commit e6047b6ac588b82d6986a1650f6e2c844b0e3b0f
+Author: Willow Veytsman <vityavv@gmail.com>
+Date:   Wed Jan 12 11:11:00 2022 -0500
+
+    proposal
