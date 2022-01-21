@@ -1,5 +1,6 @@
 #ifndef MESSAGE_H_
 #define MESSAGE_H_
+#include <time.h>
 
 struct stats {
 	int guessDistribution[6];
@@ -13,6 +14,7 @@ struct message {
 	char word[6];
 	int guesses; // zero-indexed
 	struct stats stats;
+	time_t timeGenerated;
 };
 
 #endif // MESSAGE_H_

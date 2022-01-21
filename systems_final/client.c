@@ -1,5 +1,6 @@
 //#include "client.h"
 #include "types.h"
+#include "utils.h"
 #include <curses.h>
 #include <locale.h>
 #include <stdio.h>
@@ -43,6 +44,18 @@ int main(int argc, char* argv[]) {
 	// READ FROM SERVER
 	struct message msg;
 	read(sd, &msg, sizeof(msg));
+
+	// MAKE SURE YOU CAN PLAY
+	struct stat statStat;
+	err = stat("./client_stats.bin", &statStat);
+	if (err == 0) {
+		if (statStat.st_mtime - msg.timeGenerated < 24 * 60 * 60) {
+			printf("You already played today! Come back tomorrow!\n");
+			time_t tmrwGen = msg.timeGenerated + 24 * 60 * 60;
+			printf("Next wordle will generate at %s\n", ctime(&tmrwGen));
+			return 0;
+		}
+	}
 
 	// init ncurses, clear screen, and make board
 	setlocale(LC_ALL, "UTF-8");
@@ -197,44 +210,7 @@ int main(int argc, char* argv[]) {
 	getch();
 	clear();
 
-	struct stat statStat;
-	err = stat("./client_stats.bin", &statStat);
-	struct stats stats;
-	int statsFd = open("./client_stats.bin", O_RDWR | O_CREAT, 0644);
-	if (err == 0) {
-		read(statsFd, &stats, sizeof(stats));
-		stats.played++;
-		if (guesses == 6) {
-			stats.streak = 0;
-		} else {
-			stats.streak++;
-			stats.won++;
-			if (stats.streak >= stats.maxStreak) stats.maxStreak = stats.streak;
-			stats.guessDistribution[guesses]++;
-		}
-	} else {
-		// cba to loop
-		stats.guessDistribution[0] = 0;
-		stats.guessDistribution[1] = 0;
-		stats.guessDistribution[2] = 0;
-		stats.guessDistribution[3] = 0;
-		stats.guessDistribution[4] = 0;
-		stats.guessDistribution[5] = 0;
-
-		stats.played = 1;
-		if (guesses == 6) {
-			stats.streak = 0;
-			stats.maxStreak = 0;
-			stats.won = 0;
-		} else {
-			stats.streak = 1;
-			stats.maxStreak = 1;
-			stats.won = 1;
-			stats.guessDistribution[guesses]++;
-		}
-	}
-	lseek(statsFd, 0, SEEK_SET);
-	write(statsFd, &stats, sizeof(stats));
+	struct stats stats = writeStats("./client_stats.bin", guesses, 0);
 
 	printw("Statistics:\n");
 	// TODO make fancy guess distribution

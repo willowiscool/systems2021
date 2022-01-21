@@ -1,2 +1,4 @@
+*.h.gch
 *.o
 daily_word.txt
+*.bin

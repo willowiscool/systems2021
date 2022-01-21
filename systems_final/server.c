@@ -1,5 +1,6 @@
 #include "server.h"
 #include "types.h"
+#include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -12,12 +13,13 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
-int main() {
+int main(int argc, char *argv[]) {
 	srand(time(NULL));
 
 	time_t timeGenerated;
 	char* word = getWord(&timeGenerated);
-	printf("Daily word: %s\n", word);
+
+	if (argc > 1 && strcmp(argv[1], "-show") == 0) printf("Daily word: %s\n", word);
 	printf("Word generated: %s\n", ctime(&timeGenerated));
 
 	// Get addrinfo
@@ -57,45 +59,14 @@ int main() {
 	// send word
 	struct message msg;
 	strcpy(msg.word, word);
+	msg.timeGenerated = timeGenerated;
 	free(word);
 	write(srvfd, &msg, sizeof(msg));
 
 	// get stats
 	// TODO consolidate reading stats into one func??
 	read(srvfd, &msg, sizeof(msg));
-	struct stat statStat;
-	int exists = stat("./server_stats.bin", &statStat);
-	struct stats stats;
-	int statsFd = open("./server_stats.bin", O_RDWR | O_CREAT, 0644);
-	if (exists == 0) { // exists
-		read(statsFd, &stats, sizeof(stats));
-		stats.played++;
-		if (msg.guesses != 6) {
-			// server stats does not track streak, only maxStreak
-			stats.won++;
-			if (msg.stats.maxStreak > stats.maxStreak) stats.maxStreak = msg.stats.maxStreak;
-			stats.guessDistribution[msg.guesses]++;
-		}
-	} else {
-		// cba to loop
-		stats.guessDistribution[0] = 0;
-		stats.guessDistribution[1] = 0;
-		stats.guessDistribution[2] = 0;
-		stats.guessDistribution[3] = 0;
-		stats.guessDistribution[4] = 0;
-		stats.guessDistribution[5] = 0;
-
-		stats.played = 1;
-		if (msg.guesses != 6) {
-			stats.maxStreak = 1;
-			stats.won = 1;
-		} else {
-			stats.maxStreak = 0;
-			stats.won = 0;
-		}
-	}
-	lseek(statsFd, 0, SEEK_SET);
-	write(statsFd, &stats, sizeof(stats));
+	struct stats stats = writeStats("./server_stats.bin", msg.guesses, 1);
 
 	// TODO daily statistics?
 	// send back to client
