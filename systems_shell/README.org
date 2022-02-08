@@ -1,0 +1,25 @@
+#+TITLE: Shell
+
+* Features
+- Run commands with arguments (duh)
+- Separate multiple commands on one line with semicolons
+- Pipe the output of one command to another
+- Redirection
+- Using quotes and backslashes to allow spaces and quotes in arguments (i.e. ~"a b"~ is the same as ~a\ b~ and ~'a b'~)
+- Resolve ~~~
+* Not Yet Implemented
+- Other bash builtins
+* Known Bugs
+- In other shells, ~>~ takes precedence over ~|~ but ~<~ does not. In this shell, ~>~ and ~<~ both take precedence over ~|~, such that running the command ~cat | cat < test~ in this shell is equivalent to running ~cat < test | cat~ in other shells.
+- Not closing quotes results in a segfault
+* Copy of every function header
+#+begin_src C
+char* getInput();
+void printPrompt();
+struct token* parseInput(char* input);
+int run(struct token* input);
+FILE* runPopen(struct token* input, char* type);
+int runPipe(struct token* input, char* redirectTo);
+struct stdinAndStdoutFDs createRedirects(struct token* input);
+int undoRedirects(struct stdinAndStdoutFDs sasfd);
+#+end_src
